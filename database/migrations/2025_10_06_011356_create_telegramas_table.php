@@ -12,14 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('telegramas', function (Blueprint $table) {
-            $table->id('id_mesa');
+            $table->id();
+            $table->string('id_mesa');
             $table->string('provincia');
             $table->string('lista');
             $table->string('votos_diputados');
             $table->string('votos_senadores');
-            $table->string('votos_blancos');
-            $table->string('votos_nulos');
-            $table->string('votos_recurridos');
+            $table->string('blancos');
+            $table->string('nulos');
+            $table->string('recurridos');
             $table->timestamps();
         });
     }
