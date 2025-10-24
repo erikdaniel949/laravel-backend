@@ -24,7 +24,7 @@ class CandidatosFactory extends Factory
             'cargo' => fake()->randomElement(['DIPUTADOS', 'SENADORES']),
             'lista' => fake()->randomElement(['Lista A', 'Lista B', 'Lista C']),
             'nombre' => fake()->name(),
-            'orden_en_lista' => fake()->numberBetween(1, 100),
+            'orden_en_lista' => fake()->numberBetween(1, 10),
         ];
     }
 }
