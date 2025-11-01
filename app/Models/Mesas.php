@@ -16,6 +16,8 @@ class Mesas extends Model
      * @var list<string>
      */
 
+    protected $primaryKey = 'id_mesa';
+
     protected $fillable = [
         'id_mesa',
         'provincia',

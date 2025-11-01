@@ -38,21 +38,20 @@ class CandidatosController extends Controller
         return response()->json($candidato);
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
     {
-        $data = $request->_normalized_data ?? [];
-        
-        // Validación de campos individuales
-        $validated = Validator::make($data, $this->rules());
+        // Validacion 
+        $validated = $request->validate($this->rules());
 
-        // Guardar el candidato en BD
-        $candidato = Candidatos::create($validated->validated());
+        // Crear el registro con los datos validados
+        $candidato = Candidatos::create($validated);
 
         return response()->json([
             'mensaje' => 'Candidato creado correctamente',
             'candidato' => $candidato
         ], 201);
     }
+
 
     public function update(Request $request, $id)
     {
@@ -87,31 +86,8 @@ class CandidatosController extends Controller
         return response()->json(['mensaje' => 'Candidato eliminado correctamente']);
     }
 
-    public function import(Request $request)
+    public function import()
     {
-        $data = $request->_normalized_data ?? [];
-
-        $errores = [];
-        $registrosGuardados = 0;
-
-        foreach ($data as $index => $fila) {
-            $validator = Validator::make($fila, $this->rules());
-
-            if ($validator->fails()) {
-                // registrar error de esta fila
-                $errores[$index] = $validator->errors()->all();
-                continue;
-            }
-
-            // guardar fila válida en BD
-            Candidatos::create($fila);
-
-            $registrosGuardados++;
-        }
-        return response()->json([
-            'registros_guardados' => $registrosGuardados,
-            'errores' => $errores,
-        ]);
-
+        //
     }
 }
