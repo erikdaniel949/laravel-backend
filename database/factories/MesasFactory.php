@@ -20,7 +20,7 @@ class MesasFactory extends Factory
     public function definition(): array
     {
         return [
-            'id_mesa' => fake()->unique()->numberBetween(1000, 2000),
+            'id_mesa' => fake()->unique()->numberBetween(1, 1000),
             'provincia' => fake()->state(),
             'circuito' => fake()->numberBetween(100, 1000),
             'establecimiento' => fake()->randomElement(['Escuela 1', 'Escuela 2', 'Escuela 3']),

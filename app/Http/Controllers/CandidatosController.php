@@ -19,7 +19,7 @@ class CandidatosController extends Controller
             'cargo' => 'required|in:DIPUTADOS,SENADORES' ,
             'lista' => 'required|string|max:20',
             'nombre' => 'required|string|max:255',
-            'orden_en_lista' => 'required|integer|max:10',
+            'orden_en_lista' => 'required|integer|between:1,10',
         ];
     }
 
@@ -84,10 +84,5 @@ class CandidatosController extends Controller
         $candidato->delete();
 
         return response()->json(['mensaje' => 'Candidato eliminado correctamente']);
-    }
-
-    public function import()
-    {
-        //
     }
 }

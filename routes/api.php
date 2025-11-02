@@ -6,6 +6,7 @@ use App\Http\Controllers\CandidatosController;
 use App\Http\Controllers\ListasController;
 use App\Http\Controllers\MesasController;
 use App\Http\Controllers\TelegramasController;
+use App\Http\Controllers\ImportController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -46,6 +47,9 @@ Route::post('/telegramas', [TelegramasController::class, 'store']);
 Route::put('/telegramas/{id}', [TelegramasController::class, 'update']);
 Route::delete('/telegramas/{id}', [TelegramasController::class, 'destroy']);
     
+
+Route::post('/import', [ImportController::class, 'import']);
+
 Route::get('/form', function () {
     return view('candidatos');
 });
