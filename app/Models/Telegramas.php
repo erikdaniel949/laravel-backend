@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Provincias;
 
 class Telegramas extends Model
 {
@@ -14,6 +15,11 @@ class Telegramas extends Model
      *
      * @var list<string>
      */
+
+    public function provincia()
+    {
+        return $this->belongsTo(Provincias::class, 'provincia', 'provincia');
+    }
 
     protected $fillable = [
         'id_mesa',

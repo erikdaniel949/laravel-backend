@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Provincias;
 
 class Mesas extends Model
 {
@@ -15,6 +16,11 @@ class Mesas extends Model
      *
      * @var list<string>
      */
+
+    public function provincia()
+    {
+        return $this->belongsTo(Provincias::class, 'provincia', 'provincia');
+    }
 
     protected $primaryKey = 'id_mesa';
 

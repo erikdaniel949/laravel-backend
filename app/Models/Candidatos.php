@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Provincias;
 
 class Candidatos extends Model
 {
@@ -15,6 +16,11 @@ class Candidatos extends Model
      *
      * @var list<string>
      */
+
+    public function provincia()
+    {
+        return $this->belongsTo(Provincias::class, 'provincia', 'provincia');
+    }
 
     protected $fillable = [
         'provincia',
