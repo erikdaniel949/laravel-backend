@@ -10,6 +10,13 @@ use App\Models\Listas;
 
 class ListasController extends Controller
 {
+    protected $listasService;
+
+    public function __construct(ListasService $listasService)
+    {
+        $this->listasService = $listasService;
+    }
+
     private function rules()
     {
         return [

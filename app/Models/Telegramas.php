@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Provincias;
+use App\Models\Listas;
 
 class Telegramas extends Model
 {
@@ -21,7 +22,20 @@ class Telegramas extends Model
         return $this->belongsTo(Provincias::class, 'provincia', 'provincia');
     }
 
+    public function mesa()
+    {
+        return $this->belongsTo(Mesas::class, 'id_mesa', 'id');
+    }
+
+    public function listaRelacionada()
+    {
+        return $this->belongsTo(Lista::class, 'id_lista', 'id');
+    }
+
+
+
     protected $fillable = [
+        'id_lista',
         'id_mesa',
         'provincia',
         'lista',

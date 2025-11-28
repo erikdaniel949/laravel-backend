@@ -85,4 +85,16 @@ class CandidatosController extends Controller
 
         return response()->json(['mensaje' => 'Candidato eliminado correctamente']);
     }
+
+    public function total($id)
+    {
+        $candidato = Candidatos::with('provincia')->find($id);
+
+        $votosTotales = $candidato->provincia();
+
+        return response()->json([
+            'resultado' => $votosTotales
+        ], 200, [], JSON_PRETTY_PRINT);
+    }
+
 }

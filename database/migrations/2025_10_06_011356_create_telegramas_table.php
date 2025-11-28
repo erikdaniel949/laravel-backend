@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('telegramas', function (Blueprint $table) {
             $table->id();
-            $table->string('id_mesa');
+            $table->unsignedBigInteger('id_mesa');
+            $table->unsignedBigInteger('id_lista');
             $table->string('provincia');
             $table->string('lista');
             $table->string('votos_diputados');

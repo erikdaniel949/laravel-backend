@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Provincias;
+use App\Models\Telegramas;
 
 class Mesas extends Model
 {
@@ -20,6 +21,11 @@ class Mesas extends Model
     public function provincia()
     {
         return $this->belongsTo(Provincias::class, 'provincia', 'provincia');
+    }
+
+    public function telegramas()
+    {
+        return $this->hasMany(Telegramas::class, 'id_mesa');
     }
 
     protected $primaryKey = 'id_mesa';

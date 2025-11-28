@@ -13,7 +13,8 @@ class TelegramasController extends Controller
     private function rules()
     {
         return [
-            'id_mesa' => 'required|integer|between:1,100000',
+            'id_lista' => 'required|integer|min:1|exists:listas,id',
+            'id_mesa' => 'required|integer|min:1|exists:mesas,id',
             'provincia' => ['required', Rule::in(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'])],
             'lista' => 'required|string|max:20',
             'votos_diputados' => 'required|integer|min:0',
