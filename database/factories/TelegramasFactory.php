@@ -20,7 +20,7 @@ class TelegramasFactory extends Factory
     {
         return [
             'id_mesa' => fake()->numberBetween(1000, 1010),
-            'provincia' => fake()->state(),
+            'provincia' => fake()->randomElement(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán']),
             'lista' => fake()->randomElement(['Lista A', 'Lista B', 'Lista C']),
             'votos_diputados' => fake()->numberBetween(0, 500),
             'votos_senadores' => fake()->numberBetween(0, 500),

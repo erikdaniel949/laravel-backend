@@ -85,4 +85,27 @@ class CandidatosController extends Controller
 
         return response()->json(['mensaje' => 'Candidato eliminado correctamente']);
     }
+    public function total($id)
+    {
+        $candidato = Candidatos::find($id);
+
+        if(!$candidato){
+            return response()->json(['mensaje' => 'Candidato no encontrado'], 404);
+        }
+
+        $votosCandidato = $candidato->provinciaRelacionada->telegramasRelacionados()
+            ->where('lista', $candidato->lista)
+            ->sum('votos_' . strtolower($candidato->cargo));
+
+        $votosTotalesDelCargo = $candidato->provinciaRelacionada
+            ->telegramasRelacionados()
+            ->sum('votos_' . strtolower($candidato->cargo));
+
+        $porcentaje = ($votosCandidato / $votosTotalesDelCargo) * 100;
+
+        return response()->json([
+            'votoscandidato' => $votosCandidato,
+            'porcentaje' => $porcentaje,
+        ], 200, ['Content-Type' => 'application/json; charset=utf-8'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
 }

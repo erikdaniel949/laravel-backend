@@ -9,10 +9,19 @@ use App\Models\Mesas;
 use App\Models\Telegramas;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
+use App\Services\TelegramaService;
 
 
 class ImportController extends Controller
 {
+    protected $telegramaService;
+
+    public function __construct(TelegramaService $telegramaService)
+    {
+        $this->telegramaService = $telegramaService;
+    }
+
+
     public function import(Request $request)
     {
         $archivo = $request->file('archivo');
@@ -36,14 +45,14 @@ class ImportController extends Controller
             'alianza' => 'required|string|max:255',
         ];
         $mesasRules = [
-            'id_mesa' => 'required|integer|between:1,100000',
+            'id_mesa' => 'required|integer|between:1,10000',
             'provincia' => ['required', Rule::in(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'])],
             'circuito' => 'required|string|max:20',
             'establecimiento' => 'required|string|max:255',
             'electores' => 'required|integer|min:0',
         ];
         $telegramasRules = [
-            'id_mesa' => 'required|integer|between:1,100000',
+            'id_mesa' => 'required|integer|between:1,10000',
             'provincia' => ['required', Rule::in(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'])],
             'lista' => 'required|string|max:20',
             'votos_diputados' => 'required|integer|min:0',
@@ -141,19 +150,54 @@ class ImportController extends Controller
                     }
 
                     if ($table[0] === 'telegramas') {
-                        
-                        $validator = Validator::make(array_combine($headers, $data), $telegramasRules);
-                        if ($validator->fails()) {
+
+                        // Validación
+                        $validated = Validator::make(array_combine($headers, $data), $telegramasRules);
+                        if ($validated->fails()) {
+                            $errors[] = [
+                                'tabla'  => $table,
+                                'data'   => $data,
+                                'errors' => $validated->errors()->all()
+                            ];
+                            continue;
+                        }
+
+                        $dataValidated = $validated->validated();
+                        $service = new TelegramaService();
+
+                        try {
+                            $telegramaExistente = Telegramas::where('id_mesa', $dataValidated['id_mesa'])
+                                ->where('lista', $dataValidated['lista'])
+                                ->first();
+
+                            if ($telegramaExistente) {
+                                // Update → hay que excluir el viejo
+                                $this->telegramaService->consistenciaDeVotos($dataValidated, $telegramaExistente->id);
+                                $telegramaExistente->update($dataValidated);
+                            } else {
+                                // Create → no excluir nada
+                                $this->telegramaService->consistenciaDeVotos($dataValidated, null);
+                                Telegramas::create($dataValidated);
+                            }
+                        } catch (\Exception $e) {
                             $errors[] = [
                                 'tabla' => $table,
                                 'data' => $data,
-                                'errors' => $validator->errors()->all()
+                                'errors' => [$e->getMessage()]
                             ];
-                            continue; // Salta a la próxima fila
+                            continue;
                         }
-                        // Crear el registro con los datos validados
-                        Telegramas::create($validator->validated());
+
+                        Telegramas::updateOrCreate(
+                            [
+                                'id_mesa' => $dataValidated['id_mesa'],
+                                'lista' => $dataValidated['lista']
+                            ],
+                            $dataValidated
+                        );
+
                     }
+
                 }
                 fclose($handle);
             }
@@ -162,7 +206,7 @@ class ImportController extends Controller
                 'errors' => $errors,
                 'tablasLeidas' => $tablasLeidas,
                 'registrosLeidos' => $registrosLeidos,
-            ], empty($errors) ? 200 : 207, [], JSON_PRETTY_PRINT);
+            ], empty($errors) ? 200 : 207, ['Content-Type' => 'application/json; charset=utf-8'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         }
 
         // Lógica para archivos json
@@ -254,10 +298,41 @@ class ImportController extends Controller
                     $validator = Validator::make($data, $telegramasRules);
 
                     if ($validator->fails()) {
-                        $errors[] = $validator->errors()->all();
+                        $errors[] = [
+                            'tabla' => 'telegramas',
+                            'data' => $data,
+                            'errors' => $validator->errors()->all()
+                        ];
                         continue;
                     }
-                    Telegramas::create($validator->validated());
+                    // Consistencia de votos: sumar los votos y comparar con electores de la mesa si existe
+                    $validated = $validator->validated();
+                    $sumVotes = (int) ($validated['votos_diputados'] ?? 0)
+                        + (int) ($validated['votos_senadores'] ?? 0)
+                        + (int) ($validated['blancos'] ?? 0)
+                        + (int) ($validated['nulos'] ?? 0)
+                        + (int) ($validated['recurridos'] ?? 0);
+
+                    $mesa = Mesas::where('id_mesa', $validated['id_mesa'])->first();
+                    if (!$mesa) {
+                        $errors[] = [
+                            'tabla' => 'telegramas',
+                            'data' => $data,
+                            'errors' => ["Mesa no encontrada con id_mesa {$validated['id_mesa']}"]
+                        ];
+                        continue;
+                    }
+
+                    if ($sumVotes > (int) $mesa->electores) {
+                        $errors[] = [
+                            'tabla' => 'telegramas',
+                            'data' => $data,
+                            'errors' => ["Suma de votos ({$sumVotes}) mayor que electores ({$mesa->electores}) en mesa {$validated['id_mesa']}"]
+                        ];
+                        continue;
+                    }
+
+                    Telegramas::create($validated);
                 }
             }
 
@@ -267,7 +342,7 @@ class ImportController extends Controller
                 'errors' => $errors,
                 'tablasLeidas' => $tablasLeidas,
                 'registrosLeidos' => $registrosLeidos
-            ], empty($errors) ? 200 : 207, [], JSON_PRETTY_PRINT);
+            ], empty($errors) ? 200 : 207, ['Content-Type' => 'application/json; charset=utf-8'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         }
 
         return response()->json(['mensaje' => 'Archivo no soportado'], 400);

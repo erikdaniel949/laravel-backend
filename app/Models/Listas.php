@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Provincias;
+use App\Models\Telegramas;
 
 class Listas extends Model
 {
@@ -17,9 +18,14 @@ class Listas extends Model
      * @var list<string>
      */
 
-    public function provincia()
+    public function provinciaRelacionada()
     {
         return $this->belongsTo(Provincias::class, 'provincia', 'provincia');
+    }
+
+    public function TelegramasRelacionados()
+    {
+        return $this->hasMany(Telegramas::class, 'lista', 'lista');
     }
 
     protected $fillable = [

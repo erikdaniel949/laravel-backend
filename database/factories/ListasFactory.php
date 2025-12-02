@@ -20,7 +20,7 @@ class ListasFactory extends Factory
     public function definition(): array
     {
         return [
-            'provincia' => fake()->state(),
+            'provincia' => fake()->randomElement(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán']),
             'cargo' => fake()->randomElement(['DIPUTADOS', 'SENADORES']),
             'lista' => fake()->randomElement(['Lista A', 'Lista B', 'Lista C']),
             'alianza' => fake()->randomElement(['Frente 1', 'Frente 2', 'Frente 3']),

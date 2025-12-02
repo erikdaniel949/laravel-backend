@@ -1,0 +1,5 @@
+candidatos
+provincia,cargo,lista,nombre,orden_en_lista
+Buenos Aires,DIPUTADOS,Lista A,Bien,1
+Buenos aires,SENADORES,Lista 1,Mal,2
+Buenos Aires,DIPUTADOS,Lista B,Mal,1000

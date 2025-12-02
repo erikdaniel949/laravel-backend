@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Provincias;
+use App\Models\Listas;
 
 class Candidatos extends Model
 {
@@ -17,9 +18,14 @@ class Candidatos extends Model
      * @var list<string>
      */
 
-    public function provincia()
+    public function provinciaRelacionada()
     {
         return $this->belongsTo(Provincias::class, 'provincia', 'provincia');
+    }
+
+    public function listaRelacionada()
+    {
+        return $this->belongsTo(Listas::class, 'lista', 'lista');
     }
 
     protected $fillable = [
