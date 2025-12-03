@@ -30,7 +30,7 @@ class Telegramas extends Model
 
     public function mesaRelacionada()
     {
-        return $this->belongsTo(Mesas::class, 'id_mesa', 'is_mesa');
+        return $this->belongsTo(Mesas::class, 'id_mesa', 'id_mesa');
     }
 
     protected $fillable = [
