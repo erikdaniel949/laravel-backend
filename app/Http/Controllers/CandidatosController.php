@@ -6,11 +6,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use App\Models\Candidatos;
+use App\Services\CandidatosService;
 
 
 class CandidatosController extends Controller
 {
+    protected $candidatosService;
+
+    public function __construct(CandidatosService $candidatosService)
+    {
+        $this->candidatosService = $candidatosService;
+    }
 
     private function rules()
     {
@@ -25,13 +31,13 @@ class CandidatosController extends Controller
 
     public function index()
     {
-        $candidatos = Candidatos::all();
+        $candidatos = $this->candidatosService->obtenerTodos();
         return response()->json($candidatos);
     }
     
     public function show($id)
     {
-        $candidato = Candidatos::find($id);
+        $candidato = $this->candidatosService->obtenerPorId($id);
         if (!$candidato) {
             return response()->json(['mensaje' => 'Candidato no encontrado'], 404);
         }
@@ -44,7 +50,7 @@ class CandidatosController extends Controller
         $validated = $request->validate($this->rules());
 
         // Crear el registro con los datos validados
-        $candidato = Candidatos::create($validated);
+        $candidato = $this->candidatosService->crear($validated);
 
         return response()->json([
             'mensaje' => 'Candidato creado correctamente',
@@ -56,7 +62,7 @@ class CandidatosController extends Controller
     public function update(Request $request, $id)
     {
 
-        $candidato = Candidatos::find($id);
+        $candidato = $this->candidatosService->obtenerPorId($id);
         if (!$candidato) {
             return response()->json(['mensaje' => 'Candidato no encontrado'], 404);
         }
@@ -66,22 +72,22 @@ class CandidatosController extends Controller
 
 
         // Actualizar el candidato en la BD
-        $candidato->update($validated);
+        $this->candidatosService->actualizar($id, $validated);
 
         return response()->json([
             'mensaje' => 'Candidato actualizado correctamente',
-            'candidato' => $candidato
+            'candidato' => $this->candidatosService->obtenerPorId($id)
         ]);
     }
 
     public function destroy($id)
     {
-        $candidato = Candidatos::find($id);
+        $candidato = $this->candidatosService->obtenerPorId($id);
         if (!$candidato) {
             return response()->json(['mensaje' => 'Candidato no encontrado'], 404);
         }
 
-        $candidato->delete();
+        $this->candidatosService->eliminar($id);
 
         return response()->json(['mensaje' => 'Candidato eliminado correctamente']);
     }

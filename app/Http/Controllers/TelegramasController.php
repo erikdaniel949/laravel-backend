@@ -6,10 +6,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use App\Models\Telegramas;
+use App\Services\TelegramasService;
 
 class TelegramasController extends Controller
 {
+    protected $telegramasService;
+
+    public function __construct(TelegramasService $telegramasService)
+    {
+        $this->telegramasService = $telegramasService;
+    }
+
     private function rules()
     {
         return [
@@ -27,13 +34,13 @@ class TelegramasController extends Controller
 
     public function index()
     {
-        $telegramas = Telegramas::all();
+        $telegramas = $this->telegramasService->obtenerTodos();
         return response()->json($telegramas);
     }
     
     public function show($id)
     {
-        $telegrama = Telegramas::find($id);
+        $telegrama = $this->telegramasService->obtenerPorId($id);
         if (!$telegrama) {
             return response()->json(['mensaje' => 'Telegrama no encontrado'], 404);
         }
@@ -46,7 +53,7 @@ class TelegramasController extends Controller
         $validated = $request->validate($this->rules());
 
         // Crear el registro con los datos validados
-        $telegrama = Telegramas::create($validated);
+        $telegrama = $this->telegramasService->crear($validated);
 
         return response()->json([
             'mensaje' => 'Telegrama creado correctamente',
@@ -56,7 +63,7 @@ class TelegramasController extends Controller
 
     public function update(Request $request, $id)
     {
-        $telegrama = Telegramas::find($id);
+        $telegrama = $this->telegramasService->obtenerPorId($id);
         if (!$telegrama) {
             return response()->json(['mensaje' => 'Telegrama no encontrado'], 404);
         }
@@ -65,22 +72,22 @@ class TelegramasController extends Controller
         $validated = $request->validate($this->rules());
 
         // Actualizar el telegrama en la BD
-        $telegrama->update($validated);
+        $this->telegramasService->actualizar($id, $validated);
 
         return response()->json([
             'mensaje' => 'Telegrama actualizado correctamente',
-            'telegrama' => $telegrama
+            'telegrama' => $this->telegramasService->obtenerPorId($id)
         ]);
     }
 
     public function destroy($id)
     {
-        $telegrama = Telegramas::find($id);
+        $telegrama = $this->telegramasService->obtenerPorId($id);
         if (!$telegrama) {
             return response()->json(['mensaje' => 'Telegrama no encontrado'], 404);
         }
 
-        $telegrama->delete();
+        $this->telegramasService->eliminar($id);
 
         return response()->json(['mensaje' => 'Telegrama eliminado correctamente']);
     }

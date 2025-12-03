@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use App\Models\Listas;
+use App\Services\ListasService;
 
 class ListasController extends Controller
 {
@@ -29,13 +29,13 @@ class ListasController extends Controller
 
     public function index()
     {
-        $listas = Listas::all();
+        $listas = $this->listasService->obtenerTodos();
         return response()->json($listas);
     }
     
     public function show($id)
     {
-        $lista = Listas::find($id);
+        $lista = $this->listasService->obtenerPorId($id);
         if (!$lista) {
             return response()->json(['mensaje' => 'Lista no encontrada'], 404);
         }
@@ -48,7 +48,7 @@ class ListasController extends Controller
         $validated = $request->validate($this->rules());
 
         // Crear el registro con los datos validados
-        $lista = Listas::create($validated);
+        $lista = $this->listasService->crear($validated);
 
         return response()->json([
             'mensaje' => 'Lista creada correctamente',
@@ -58,7 +58,7 @@ class ListasController extends Controller
 
     public function update(Request $request, $id)
     {
-        $lista = Listas::find($id);
+        $lista = $this->listasService->obtenerPorId($id);
         if (!$lista) {
             return response()->json(['mensaje' => 'Lista no encontrada'], 404);
         }
@@ -67,22 +67,22 @@ class ListasController extends Controller
         $validated = $request->validate($this->rules());
 
         // Actualizar la lista en la BD
-        $lista->update($validated);
+        $this->listasService->actualizar($id, $validated);
 
         return response()->json([
             'mensaje' => 'Lista actualizada correctamente',
-            'lista' => $lista
+            'lista' => $this->listasService->obtenerPorId($id)
         ]);
     }
 
     public function destroy($id)
     {
-        $lista = Listas::find($id);
+        $lista = $this->listasService->obtenerPorId($id);
         if (!$lista) {
             return response()->json(['mensaje' => 'Lista no encontrada'], 404);
         }
 
-        $lista->delete();
+        $this->listasService->eliminar($id);
 
         return response()->json(['mensaje' => 'Lista eliminada correctamente']);
     }

@@ -6,10 +6,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use App\Models\Mesas;
+use App\Services\MesasService;
 
 class MesasController extends Controller
 {
+    protected $mesasService;
+
+    public function __construct(MesasService $mesasService)
+    {
+        $this->mesasService = $mesasService;
+    }
+
     private function rules()
     {
         return [
@@ -23,13 +30,13 @@ class MesasController extends Controller
 
     public function index()
     {
-        $mesas = Mesas::all();
+        $mesas = $this->mesasService->obtenerTodos();
         return response()->json($mesas);
     }
     
     public function show($id)
     {
-        $mesa = Mesas::find($id);
+        $mesa = $this->mesasService->obtenerPorId($id);
         if (!$mesa) {
             return response()->json(['mensaje' => 'Mesa no encontrada'], 404);
         }
@@ -42,7 +49,7 @@ class MesasController extends Controller
         $validated = $request->validate($this->rules());
 
         // Crear el registro con los datos validados
-        $mesa = Mesas::create($validated);
+        $mesa = $this->mesasService->crear($validated);
 
         return response()->json([
             'mensaje' => 'Mesa creada correctamente',
@@ -52,7 +59,7 @@ class MesasController extends Controller
 
     public function update(Request $request, $id)
     {
-        $mesa = Mesas::find($id);
+        $mesa = $this->mesasService->obtenerPorId($id);
         if (!$mesa) {
             return response()->json(['mensaje' => 'Mesa no encontrada'], 404);
         }
@@ -61,22 +68,22 @@ class MesasController extends Controller
         $validated = $request->validate($this->rules());
 
         // Actualizar la mesa en la BD
-        $mesa->update($validated);
+        $this->mesasService->actualizar($id, $validated);
 
         return response()->json([
             'mensaje' => 'Mesa actualizada correctamente',
-            'mesa' => $mesa
+            'mesa' => $this->mesasService->obtenerPorId($id)
         ]);
     }
 
     public function destroy($id)
     {
-        $mesa = Mesas::find($id);
+        $mesa = $this->mesasService->obtenerPorId($id);
         if (!$mesa) {
             return response()->json(['mensaje' => 'Mesa no encontrada'], 404);
         }
 
-        $mesa->delete();
+        $this->mesasService->eliminar($id);
 
         return response()->json(['mensaje' => 'Mesa eliminada correctamente']);
     }
