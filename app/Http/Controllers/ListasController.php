@@ -7,11 +7,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Models\Listas;
-use App\Models\Telegramas;
-use Illuminate\Support\Facades\DB;
 
 class ListasController extends Controller
 {
+    protected $listasService;
+
+    public function __construct(ListasService $listasService)
+    {
+        $this->listasService = $listasService;
+    }
+
     private function rules()
     {
         return [
@@ -80,45 +85,5 @@ class ListasController extends Controller
         $lista->delete();
 
         return response()->json(['mensaje' => 'Lista eliminada correctamente']);
-    }
-
-    public function totales()
-    {
-        // Agrupar por lista usando Eloquent (modelo Telegramas)
-        $listas = Telegramas::select('lista')
-            ->selectRaw('SUM(votos_diputados) as votos_diputados, SUM(votos_senadores) as votos_senadores')
-            ->groupBy('lista')
-            ->get();
-
-        // Totales generales a partir del modelo
-        $totalDiputados = (int) Telegramas::sum('votos_diputados');
-        $totalSenadores = (int) Telegramas::sum('votos_senadores');
-        $totalBlancos = (int) Telegramas::sum('blancos');
-        $totalNulos = (int) Telegramas::sum('nulos');
-        $totalRecurridos = (int) Telegramas::sum('recurridos');
-        $totalEmitidos = $totalDiputados + $totalSenadores + $totalBlancos + $totalNulos + $totalRecurridos;
-        
-        $resultado = ['totales_generales' => [
-            'votos_diputados' => $totalDiputados,
-            'votos_senadores' => $totalSenadores,
-            'blancos' => $totalBlancos,
-            'nulos' => $totalNulos,
-            'recurridos' => $totalRecurridos,
-            'participacion' => $totalEmitidos,
-        ]];
-
-        foreach ($listas as $lista) {
-            $vd = (int) $lista->votos_diputados;
-            $vs = (int) $lista->votos_senadores;
-
-            $resultado[$lista->lista] = [
-                'votos_diputados' => $vd,
-                'votos_senadores' => $vs,
-                'porcentaje_diputados' => $totalDiputados ? round(($vd / $totalDiputados) * 100, 2) : 0,
-                'porcentaje_senadores' => $totalSenadores ? round(($vs / $totalSenadores) * 100, 2) : 0,
-            ];
-        }
-
-        return response()->json($resultado, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 }

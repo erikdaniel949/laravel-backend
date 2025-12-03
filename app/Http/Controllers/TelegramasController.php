@@ -7,21 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Models\Telegramas;
-use App\Services\TelegramaService;
 
 class TelegramasController extends Controller
 {
-    protected $telegramaService;
-
-    public function __construct(TelegramaService $telegramaService)
-    {
-        $this->telegramaService = $telegramaService;
-    }
-
     private function rules()
     {
         return [
-            'id_mesa' => 'required|integer|between:1,10000',
+            'id_lista' => 'required|integer|min:1|exists:listas,id',
+            'id_mesa' => 'required|integer|min:1|exists:mesas,id',
             'provincia' => ['required', Rule::in(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'])],
             'lista' => 'required|string|max:20',
             'votos_diputados' => 'required|integer|min:0',
@@ -47,20 +40,12 @@ class TelegramasController extends Controller
         return response()->json($telegrama);
     }
 
-    public function store(Request $request, TelegramaService $service)
+    public function store(Request $request)
     {
+        // Validacion 
         $validated = $request->validate($this->rules());
 
-        // consistencia de votos
-        try {
-            $service->consistenciaDeVotos($validated);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => $e->getMessage()
-            ], 422);
-        }
-
-        // Crear
+        // Crear el registro con los datos validados
         $telegrama = Telegramas::create($validated);
 
         return response()->json([
@@ -69,19 +54,17 @@ class TelegramasController extends Controller
         ], 201);
     }
 
-
-    public function update(Request $request, $id, TelegramaService $service)
+    public function update(Request $request, $id)
     {
         $telegrama = Telegramas::find($id);
-
         if (!$telegrama) {
             return response()->json(['mensaje' => 'Telegrama no encontrado'], 404);
         }
 
+        // Validación de campos individuales
         $validated = $request->validate($this->rules());
 
-        $service->consistenciaDeVotos($validated, $telegrama->id);
-
+        // Actualizar el telegrama en la BD
         $telegrama->update($validated);
 
         return response()->json([
@@ -89,8 +72,6 @@ class TelegramasController extends Controller
             'telegrama' => $telegrama
         ]);
     }
-
-
 
     public function destroy($id)
     {
