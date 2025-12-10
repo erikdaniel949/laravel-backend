@@ -23,7 +23,7 @@ class CandidatosController extends Controller
         return [
             'provincia' => ['required', Rule::in(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'])],
             'cargo' => 'required|in:DIPUTADOS,SENADORES' ,
-            'lista' => 'required|string|max:20',
+            'lista' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
             'orden_en_lista' => 'required|integer|between:1,10',
         ];
@@ -91,7 +91,7 @@ class CandidatosController extends Controller
 
         return response()->json(['mensaje' => 'Candidato eliminado correctamente']);
     }
-
+/*
     public function total($id)
     {
         $candidato = Candidatos::with('provincia')->find($id);
@@ -102,5 +102,5 @@ class CandidatosController extends Controller
             'resultado' => $votosTotales
         ], 200, [], JSON_PRETTY_PRINT);
     }
-
+*/
 }

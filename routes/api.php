@@ -8,6 +8,7 @@ use App\Http\Controllers\MesasController;
 use App\Http\Controllers\TelegramasController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ResultadosController;
+use App\Http\Controllers\ProvinciasController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -27,10 +28,16 @@ Route::get('/candidatos/{id}', [CandidatosController::class, 'show']);
 Route::post('/candidatos', [CandidatosController::class, 'store']);
 Route::put('/candidatos/{id}', [CandidatosController::class, 'update']);
 Route::delete('/candidatos/{id}', [CandidatosController::class, 'destroy']);
-//Route::post('/candidatos/import', [CandidatosController::class, 'import']);
 
 // Rutas para Listas
 Route::get('/listas/resultados', [ListasController::class, 'resultados']);
+
+// Rutas para Provincias (ABM)
+Route::get('/provincias', [ProvinciasController::class, 'index']);
+Route::get('/provincias/{id}', [ProvinciasController::class, 'show']);
+Route::post('/provincias', [ProvinciasController::class, 'store']);
+Route::put('/provincias/{id}', [ProvinciasController::class, 'update']);
+Route::delete('/provincias/{id}', [ProvinciasController::class, 'destroy']);
 
 Route::get('/listas', [ListasController::class, 'index']);
 Route::get('/listas/{id}', [ListasController::class, 'show']);
@@ -54,6 +61,11 @@ Route::delete('/telegramas/{id}', [TelegramasController::class, 'destroy']);
     
 
 Route::post('/import', [ImportController::class, 'import']);
+
+Route::get('/resultados/ranking', [ResultadosController::class, 'rankingListas']);
+Route::get('/resultados/participacion', [ResultadosController::class, 'participacionNacional']);
+Route::get('/resultados/verCandidato/{id}', [ResultadosController::class, 'verCandidato']);
+
 
 Route::get('/form', function () {
     return view('candidatos');

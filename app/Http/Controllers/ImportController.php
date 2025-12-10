@@ -9,16 +9,16 @@ use App\Models\Mesas;
 use App\Models\Telegramas;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
-use App\Services\TelegramaService;
+use App\Services\ImportService;
 
 
 class ImportController extends Controller
 {
-    protected $telegramaService;
+    protected $importService;
 
-    public function __construct(TelegramaService $telegramaService)
+    public function __construct(ImportService $importService)
     {
-        $this->telegramaService = $telegramaService;
+        $this->importService = $importService;
     }
 
 
@@ -26,41 +26,6 @@ class ImportController extends Controller
     {
         $archivo = $request->file('archivo');
         $extension = strtolower($archivo->getClientOriginalExtension());
-
-        $errors = [];
-        $tablasLeidas = [];
-        $registrosLeidos = [];
-
-        $candidatosRules = [
-            'provincia' => ['required', Rule::in(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'])],
-            'cargo' => 'required|in:DIPUTADOS,SENADORES' ,
-            'lista' => 'required|string|max:20',
-            'nombre' => 'required|string|max:255',
-            'orden_en_lista' => 'required|integer|max:10',
-        ];
-        $listasRules = [
-            'provincia' => ['required', Rule::in(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'])],
-            'cargo' => 'required|in:DIPUTADOS,SENADORES',
-            'lista' => 'required|string|max:20',
-            'alianza' => 'required|string|max:255',
-        ];
-        $mesasRules = [
-            'id_mesa' => 'required|integer|between:1,10000',
-            'provincia' => ['required', Rule::in(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'])],
-            'circuito' => 'required|string|max:20',
-            'establecimiento' => 'required|string|max:255',
-            'electores' => 'required|integer|min:0',
-        ];
-        $telegramasRules = [
-            'id_mesa' => 'required|integer|between:1,10000',
-            'provincia' => ['required', Rule::in(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'])],
-            'lista' => 'required|string|max:20',
-            'votos_diputados' => 'required|integer|min:0',
-            'votos_senadores' => 'required|integer|min:0',
-            'blancos' => 'required|integer|min:0',
-            'nulos' => 'required|integer|min:0',
-            'recurridos' => 'required|integer|min:0',
-        ];
 
         // Lógica para archivos csv
         if ($extension === 'csv') {
@@ -85,127 +50,13 @@ class ImportController extends Controller
                 1001,CABA,Lista A,250,200,100,50,10
                 1002,CABA,Lista B,300,250,150,100,50
             */
-            if (($handle = fopen($archivo, 'r')) !== false) {
-                $table = fgetcsv($handle, 1000, ','); // Leer la primera fila como nombre de tabla
+            $respuesta = $this->importService->importarCSV($archivo->getPathname());
 
-                $tablasLeidas[] = $table[0];
-
-                $headers = fgetcsv($handle, 1000, ','); // Leer la segunda fila como encabezados
-                while(($data = fgetcsv($handle, 1000, ',')) !== false) {
-                    if ($data[0] === null) {
-                        $table = fgetcsv($handle, 1000, ','); // Leer la siguiente fila como nombre de tabla
-
-                        $tablasLeidas[] = $table[0];
-
-                        $headers = fgetcsv($handle, 1000, ','); // Leer la siguiente fila como encabezados
-                        continue;
-                    }
-                    $registrosLeidos[] = $data;
-
-                    if ($table[0] === 'candidatos') {
-                        
-
-                        $validator = Validator::make(array_combine($headers, $data), $candidatosRules);
-                        if ($validator->fails()) {
-                            $errors[] = [
-                                'tabla' => $table,
-                                'data' => $data,
-                                'errors' => $validator->errors()->all()
-                            ];
-                            continue; // Salta a la próxima fila
-                        }
-
-                        // Crear el registro con los datos validados
-                        Candidatos::create($validator->validated());
-                    }
-
-                    if ($table[0] === 'listas') {
-                        $validator = Validator::make(array_combine($headers, $data), $listasRules);
-                        if ($validator->fails()) {
-                            $errors[] = [
-                                'tabla' => $table,
-                                'data' => $data,
-                                'errors' => $validator->errors()->all()
-                            ];
-                            continue; // Salta a la próxima fila
-                        }
-
-                        // Crear el registro con los datos validados
-                        Listas::create($validator->validated());
-                    }
-
-                    if ($table[0] === 'mesas') {
-                        
-                        $validator = Validator::make(array_combine($headers, $data), $mesasRules);
-                        if ($validator->fails()) {
-                            $errors[] = [
-                                'tabla' => $table,
-                                'data' => $data,
-                                'errors' => $validator->errors()->all()
-                            ];
-                            continue; // Salta a la próxima fila
-                        }
-                        // Crear el registro con los datos validados
-                        Mesas::create($validator->validated());
-                    }
-
-                    if ($table[0] === 'telegramas') {
-
-                        // Validación
-                        $validated = Validator::make(array_combine($headers, $data), $telegramasRules);
-                        if ($validated->fails()) {
-                            $errors[] = [
-                                'tabla'  => $table,
-                                'data'   => $data,
-                                'errors' => $validated->errors()->all()
-                            ];
-                            continue;
-                        }
-
-                        $dataValidated = $validated->validated();
-                        $service = new TelegramaService();
-
-                        try {
-                            $telegramaExistente = Telegramas::where('id_mesa', $dataValidated['id_mesa'])
-                                ->where('lista', $dataValidated['lista'])
-                                ->first();
-
-                            if ($telegramaExistente) {
-                                // Update → hay que excluir el viejo
-                                $this->telegramaService->consistenciaDeVotos($dataValidated, $telegramaExistente->id);
-                                $telegramaExistente->update($dataValidated);
-                            } else {
-                                // Create → no excluir nada
-                                $this->telegramaService->consistenciaDeVotos($dataValidated, null);
-                                Telegramas::create($dataValidated);
-                            }
-                        } catch (\Exception $e) {
-                            $errors[] = [
-                                'tabla' => $table,
-                                'data' => $data,
-                                'errors' => [$e->getMessage()]
-                            ];
-                            continue;
-                        }
-
-                        Telegramas::updateOrCreate(
-                            [
-                                'id_mesa' => $dataValidated['id_mesa'],
-                                'lista' => $dataValidated['lista']
-                            ],
-                            $dataValidated
-                        );
-
-                    }
-
-                }
-                fclose($handle);
-            }
             return response()->json([
                 'mensaje' => 'Archivo CSV importado', 
-                'errors' => $errors,
-                'tablasLeidas' => $tablasLeidas,
-                'registrosLeidos' => $registrosLeidos,
+                'errors' => $respuesta['errors'],
+                'tablasLeidas' => $respuesta['tablasLeidas'],
+                'registrosLeidos' => $respuesta['registrosLeidos'],
             ], empty($errors) ? 200 : 207, ['Content-Type' => 'application/json; charset=utf-8'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         }
 
@@ -231,117 +82,12 @@ class ImportController extends Controller
                 ]
             }
             */
-            $json = json_decode(file_get_contents($archivo));
-            if (isset($json->candidatos)) {
-                $tablasLeidas[] = 'candidatos';
-                foreach ($json->candidatos as $candidato) {
-                    $registrosLeidos[] = $candidato;
-                    $data = array_combine(
-                        ['provincia','cargo','lista','nombre','orden_en_lista'],
-                        (array) $candidato
-                    );
-
-                    $validator = Validator::make($data, $candidatosRules);
-
-                    if ($validator->fails()) {
-                        $errors[] = $validator->errors()->all();
-                        continue;
-                    }
-                    Candidatos::create($validator->validated());
-                }
-            }
-            if (isset($json->listas)) {
-                $tablasLeidas[] = 'listas';
-                foreach ($json->listas as $lista) {
-                    $registrosLeidos[] = $lista;
-                    $data = array_combine(
-                        ['provincia','cargo','lista','alianza'],
-                        (array) $lista
-                    );
-
-                    $validator = Validator::make($data, $listasRules);
-
-                    if ($validator->fails()) {
-                        $errors[] = $validator->errors()->all();
-                        continue;
-                    }
-                    Listas::create($validator->validated());
-                }
-            }
-            if (isset($json->mesas)) {
-                $tablasLeidas[] = 'mesas';
-                foreach ($json->mesas as $mesa) {
-                    $registrosLeidos[] = $mesa;
-                    $data = array_combine(
-                        ['id_mesa','provincia','circuito','establecimiento','electores'],
-                        (array) $mesa
-                    );
-
-                    $validator = Validator::make($data, $mesasRules);
-
-                    if ($validator->fails()) {
-                        $errors[] = $validator->errors()->all();
-                        continue;
-                    }
-                    Mesas::create($validator->validated());
-                }
-            }
-            if (isset($json->telegramas)) {
-                $tablasLeidas[] = 'telegramas';
-                foreach ($json->telegramas as $telegrama) {
-                    $registrosLeidos[] = $telegrama;
-                    $data = array_combine(
-                        ['id_mesa','provincia','lista','votos_diputados','votos_senadores','blancos','nulos','recurridos'],
-                        (array) $telegrama
-                    );
-
-                    $validator = Validator::make($data, $telegramasRules);
-
-                    if ($validator->fails()) {
-                        $errors[] = [
-                            'tabla' => 'telegramas',
-                            'data' => $data,
-                            'errors' => $validator->errors()->all()
-                        ];
-                        continue;
-                    }
-                    // Consistencia de votos: sumar los votos y comparar con electores de la mesa si existe
-                    $validated = $validator->validated();
-                    $sumVotes = (int) ($validated['votos_diputados'] ?? 0)
-                        + (int) ($validated['votos_senadores'] ?? 0)
-                        + (int) ($validated['blancos'] ?? 0)
-                        + (int) ($validated['nulos'] ?? 0)
-                        + (int) ($validated['recurridos'] ?? 0);
-
-                    $mesa = Mesas::where('id_mesa', $validated['id_mesa'])->first();
-                    if (!$mesa) {
-                        $errors[] = [
-                            'tabla' => 'telegramas',
-                            'data' => $data,
-                            'errors' => ["Mesa no encontrada con id_mesa {$validated['id_mesa']}"]
-                        ];
-                        continue;
-                    }
-
-                    if ($sumVotes > (int) $mesa->electores) {
-                        $errors[] = [
-                            'tabla' => 'telegramas',
-                            'data' => $data,
-                            'errors' => ["Suma de votos ({$sumVotes}) mayor que electores ({$mesa->electores}) en mesa {$validated['id_mesa']}"]
-                        ];
-                        continue;
-                    }
-
-                    Telegramas::create($validated);
-                }
-            }
-
-
+            $respuesta = $this->importService->importarJSON($archivo->getPathname());
             return response()->json([
                 'mensaje' => 'Archivo JSON importado',
-                'errors' => $errors,
-                'tablasLeidas' => $tablasLeidas,
-                'registrosLeidos' => $registrosLeidos
+                'errors' => $respuesta['errors'],
+                'tablasLeidas' => $respuesta['tablasLeidas'],
+                'registrosLeidos' => $respuesta['registrosLeidos'],
             ], empty($errors) ? 200 : 207, ['Content-Type' => 'application/json; charset=utf-8'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
         }
 

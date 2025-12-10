@@ -2,13 +2,13 @@
 
 namespace App\Services;
 
-use App\Repositories\ListasRepository;
+use App\Repositories\ProvinciasRepository;
 
-class ListasService
+class ProvinciasService
 {
     protected $repository;
 
-    public function __construct(ListasRepository $repository)
+    public function __construct(ProvinciasRepository $repository)
     {
         $this->repository = $repository;
     }
