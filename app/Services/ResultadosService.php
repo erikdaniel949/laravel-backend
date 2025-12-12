@@ -30,4 +30,9 @@ class ResultadosService
     {
         return $this->resultadosRepository->obtenerResultadosCandidato($id);
     }
+
+    public function obtenerCantidades(): array
+    {
+        return $this->resultadosRepository->obtenerCantidades();
+    }
 }

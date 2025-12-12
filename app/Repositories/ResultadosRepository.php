@@ -29,4 +29,8 @@ class ResultadosRepository
         return $this->resultadosDAO->obtenerResultadosCandidato($id);
     }
 
+    public function obtenerCantidades(): array
+    {
+        return $this->resultadosDAO->obtenerCantidades();
+    }
 }

@@ -65,7 +65,7 @@ Route::post('/import', [ImportController::class, 'import']);
 Route::get('/resultados/ranking', [ResultadosController::class, 'rankingListas']);
 Route::get('/resultados/participacion', [ResultadosController::class, 'participacionNacional']);
 Route::get('/resultados/verCandidato/{id}', [ResultadosController::class, 'verCandidato']);
-
+Route::get('/resultados/cantidades', [ResultadosController::class, 'cantidades']);
 
 Route::get('/form', function () {
     return view('candidatos');
