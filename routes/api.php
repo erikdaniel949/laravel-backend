@@ -9,16 +9,13 @@ use App\Http\Controllers\TelegramasController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ResultadosController;
 use App\Http\Controllers\ProvinciasController;
+use App\Http\Controllers\CalculoDeBancasController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
 
-
-Route::get('/', function () {
-    return view('welcome');
-});
 
 // Rutas para Candidatos
 Route::get('/candidatos/total/{id}', [CandidatosController::class, 'total']);
@@ -66,6 +63,9 @@ Route::get('/resultados/ranking', [ResultadosController::class, 'rankingListas']
 Route::get('/resultados/participacion', [ResultadosController::class, 'participacionNacional']);
 Route::get('/resultados/verCandidato/{id}', [ResultadosController::class, 'verCandidato']);
 Route::get('/resultados/cantidades', [ResultadosController::class, 'cantidades']);
+
+Route::get('/calculoBancas', [CalculoDeBancasController::class, 'calcular']);
+Route::get('/legisladores', [CalculoDeBancasController::class, 'asignarBancas']);
 
 Route::get('/form', function () {
     return view('candidatos');

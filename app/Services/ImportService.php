@@ -41,7 +41,7 @@ class ImportService
             'cargo' => 'required|in:DIPUTADOS,SENADORES',
             'lista' => 'required|string|max:255',
             'nombre' => 'required|string|max:255',
-            'orden_en_lista' => 'required|integer|max:10',
+            'orden_en_lista' => 'required|integer|min:1|max:50',
         ];
         $this->listasRules = [
             'provincia' => ['required', Rule::in(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'])],

@@ -37,4 +37,9 @@ class CandidatosRepository
     {
         return $this->dao->eliminar($id);
     }
+
+    public function obtenerCandidatosDeUnaLista(array $filtros)
+    {
+        return $this->dao->obtenerCandidatosDeUnaLista($filtros);
+    }
 }

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('cargo');
             $table->string('lista');
             $table->string('nombre');
-            $table->string('orden_en_lista');
+            $table->integer('orden_en_lista');
             $table->timestamps();
         });
     }
