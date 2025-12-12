@@ -6,6 +6,7 @@ use App\Repositories\CandidatosRepository;
 use App\Repositories\ListasRepository;
 use App\Repositories\MesasRepository;
 use App\Repositories\TelegramasRepository;
+use App\Models\Telegramas;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -57,7 +58,7 @@ class ImportService
             'electores' => 'required|integer|min:0',
         ];
         $this->telegramasRules = [
-            'id_mesa' => 'required|integer|between:1,100000',
+            'id_mesa' => 'required|integer|between:1,100000|exists:mesas,id_mesa',
             'provincia' => ['required', Rule::in(['Buenos Aires','CABA','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'])],
             'lista' => 'required|string|max:255',
             'votos_diputados' => 'required|integer|min:0',
@@ -151,8 +152,34 @@ class ImportService
                         continue;
                     }
 
-                    // Crear el registro con los datos validados
-                    $this->telegramasRepository->crear($validated->validated());
+                    $validatedData = $validated->validated();
+                    // Buscar telegrama existente por id_mesa + lista
+                    $existing = $this->telegramasRepository->obtenerPorMesaYLista($validatedData['id_mesa'], $validatedData['lista']);
+                    // Validar consistencia de votos y duplicados a nivel de dominio
+                    try {
+                        Telegramas::validarConsistencia($validatedData, $existing ? $existing->id : null);
+                    } catch (\Exception $e) {
+                        $errors[] = [
+                            'tabla'  => $table,
+                            'data'   => $data,
+                            'errors' => [$e->getMessage()]
+                        ];
+                        continue;
+                    }
+
+                    // Actualizar si existe, si no crear
+                    if ($existing) {
+                        $updated = $this->telegramasRepository->actualizar($existing->id, $validatedData);
+                        if (!$updated) {
+                            $errors[] = [
+                                'tabla' => $table,
+                                'data' => $data,
+                                'errors' => ['No se pudo actualizar el telegrama existente.']
+                            ];
+                        }
+                    } else {
+                        $this->telegramasRepository->crear($validatedData);
+                    }
                 }
 
             }
@@ -246,7 +273,32 @@ class ImportService
                     ];
                     continue;
                 }
-                $this->telegramasRepository->crear($validator->validated());
+                $validatedData = $validator->validated();
+                // Buscar telegrama existente por id_mesa + lista
+                $existing = $this->telegramasRepository->obtenerPorMesaYLista($validatedData['id_mesa'], $validatedData['lista']);
+                try {
+                    Telegramas::validarConsistencia($validatedData, $existing ? $existing->id : null);
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'tabla' => 'telegramas',
+                        'data' => $data,
+                        'errors' => [$e->getMessage()]
+                    ];
+                    continue;
+                }
+                if ($existing) {
+                    $updated = $this->telegramasRepository->actualizar($existing->id, $validatedData);
+                    if (!$updated) {
+                        $errors[] = [
+                            'tabla' => 'telegramas',
+                            'data' => $data,
+                            'errors' => ['No se pudo actualizar el telegrama existente.']
+                        ];
+                        continue;
+                    }
+                } else {
+                    $this->telegramasRepository->crear($validatedData);
+                }
             }
         }
         return [

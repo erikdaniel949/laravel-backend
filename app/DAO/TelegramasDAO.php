@@ -37,4 +37,9 @@ class TelegramasDAO
         }
         return $telegrama->delete();
     }
+
+    public function obtenerPorMesaYLista($idMesa, $lista)
+    {
+        return Telegramas::where('id_mesa', $idMesa)->where('lista', $lista)->first();
+    }
 }

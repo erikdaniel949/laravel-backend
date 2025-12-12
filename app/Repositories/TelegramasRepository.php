@@ -37,4 +37,9 @@ class TelegramasRepository
     {
         return $this->dao->eliminar($id);
     }
+
+    public function obtenerPorMesaYLista($idMesa, $lista)
+    {
+        return $this->dao->obtenerPorMesaYLista($idMesa, $lista);
+    }
 }
